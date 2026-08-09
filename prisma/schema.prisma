@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurants Restaurant[]
+}
+
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+
+  address   String
+  latitude  Float
+  longitude Float
+
+  phone          String?
+  website        String?
+  reservationUrl String?
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  images       RestaurantImage[]
+  menus        Menu[]
+  openingHours OpeningHour[]
+  offers       Offer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RestaurantImage {
+  id           String     @id @default(cuid())
+  url          String
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Menu {
+  id           String     @id @default(cuid())
+  name         String
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  items MenuItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MenuItem {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+
+  menuId String
+  menu   Menu   @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OpeningHour {
+  id        String  @id @default(cuid())
+  dayOfWeek Int
+  openTime  String?
+  closeTime String?
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, dayOfWeek])
+}
+
+model Offer {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+
+  startsAt  DateTime
+  expiresAt DateTime
+  active    Boolean  @default(false)
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
